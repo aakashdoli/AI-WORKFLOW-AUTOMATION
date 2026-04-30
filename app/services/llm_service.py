@@ -30,4 +30,11 @@ class LLMService:
                 'response_schema': response_schema,
             }
         )
-        return response.parsed
+        return response.parsed, response.usage_metadata.total_token_count if response.usage_metadata else 0
+
+    def generate_content_with_usage(self, prompt: str):
+        response = self.client.models.generate_content(
+            model=self.model_name,
+            contents=prompt
+        )
+        return response.text, response.usage_metadata.total_token_count if response.usage_metadata else 0

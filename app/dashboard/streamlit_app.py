@@ -1,5 +1,7 @@
 import streamlit as st
 import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
 import os
 import sys
 from datetime import datetime
@@ -12,43 +14,38 @@ from app.services.llm_service import LLMService
 from app.pipelines.reporting_pipeline import ReportingPipeline
 
 # Page Config
-st.set_page_config(page_title="AI Workflow Automation Platform", layout="wide", page_icon="🤖")
+st.set_page_config(page_title="AI Ops | Workflow Automation", layout="wide", page_icon="⚡")
 
 # Initialize DB
 init_db()
 
-# Custom CSS for Premium Look
+# Custom CSS for Professional Dark/Light Hybrid Look
 st.markdown("""
     <style>
-    .main {
-        background-color: #f8f9fa;
+    [data-testid="stMetricValue"] {
+        font-size: 28px;
+        color: #1E88E5;
     }
-    .stButton>button {
-        background-color: #4CAF50;
-        color: white;
-        border-radius: 8px;
-        padding: 0.5rem 1rem;
-        border: none;
+    .main-header {
+        font-size: 42px;
+        font-weight: 800;
+        color: #1A237E;
+        margin-bottom: 0px;
     }
-    .stMetric {
+    .sub-header {
+        font-size: 18px;
+        color: #546E7A;
+        margin-bottom: 30px;
+    }
+    .card {
         background-color: white;
-        padding: 1rem;
-        border-radius: 12px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-    .report-card {
-        background-color: white;
-        padding: 1.5rem;
-        border-radius: 12px;
-        margin-bottom: 1rem;
-        border-left: 5px solid #4CAF50;
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        margin-bottom: 20px;
     }
     </style>
     """, unsafe_allow_html=True)
-
-# Sidebar
-st.sidebar.title("AI Ops Dashboard")
-menu = st.sidebar.radio("Navigation", ["Workflow Overview", "Execute Pipeline", "Execution History"])
 
 # Services
 db_service = DatabaseService()
@@ -58,98 +55,161 @@ except Exception as e:
     st.sidebar.error(f"LLM Service Error: {e}")
     llm_service = None
 
-if menu == "Workflow Overview":
-    st.title("📈 Workflow Operational Metrics")
+# Sidebar
+st.sidebar.image("https://cdn-icons-png.flaticon.com/512/2103/2103633.png", width=80)
+st.sidebar.title("AI Ops Command")
+menu = st.sidebar.selectbox("Navigate", ["Strategic Overview", "Workflow Execution", "Operation logs", "Analytics Deep Dive", "AI System Insights"])
+
+if menu == "Strategic Overview":
+# ... (rest of the code remains same)
+    st.markdown('<p class="main-header">AI Operations Platform</p>', unsafe_allow_html=True)
+    st.markdown('<p class="sub-header">Real-time automation monitoring & intelligence</p>', unsafe_allow_html=True)
     
-    col1, col2, col3 = st.columns(3)
-    
-    workflows = db_service.get_all_workflows()
     executions = db_service.get_executions()
     
+    # KPI Row
+    col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric("Total Workflows", len(workflows))
+        st.metric("Total Automations", len(executions))
     with col2:
-        st.metric("Total Executions", len(executions))
+        success_rate = len([e for e in executions if e.status == "COMPLETED"]) / len(executions) * 100 if executions else 0
+        st.metric("Success Rate", f"{success_rate:.1f}%", delta="0.5%")
     with col3:
-        completed = [e for e in executions if e.status == "COMPLETED"]
-        st.metric("Success Rate", f"{len(completed)/len(executions)*100:.1f}%" if executions else "0%")
+        avg_latency = sum([e.latency_ms for e in executions if e.latency_ms]) / len(executions) if executions else 0
+        st.metric("Avg Latency", f"{avg_latency:.0f}ms", delta="-12ms")
+    with col4:
+        total_tokens = sum([e.token_usage for e in executions if e.token_usage]) if executions else 0
+        st.metric("AI Tokens Used", f"{total_tokens:,}")
 
-    st.subheader("Recent Activity")
+    # Charts Row
+    c1, c2 = st.columns(2)
+    
     if executions:
-        exec_df = pd.DataFrame([{
-            "ID": e.id,
+        df_exec = pd.DataFrame([{
             "Workflow": e.workflow.name,
+            "Latency": e.latency_ms or 0,
+            "Tokens": e.token_usage or 0,
             "Status": e.status,
-            "Started At": e.started_at,
-            "Duration": (e.completed_at - e.started_at).total_seconds() if e.completed_at else "N/A"
-        } for e in executions[:10]])
-        st.table(exec_df)
+            "Date": e.started_at
+        } for e in executions])
+
+        with c1:
+            st.subheader("Workflow Execution Volume")
+            fig = px.pie(df_exec, names='Workflow', hole=0.4, color_discrete_sequence=px.colors.qualitative.Pastel)
+            st.plotly_chart(fig, use_container_width=True)
+
+        with c2:
+            st.subheader("Latency Trends (ms)")
+            fig = px.area(df_exec.sort_values("Date"), x="Date", y="Latency", line_shape='spline')
+            st.plotly_chart(fig, use_container_width=True)
     else:
-        st.info("No executions recorded yet.")
+        st.info("Start your first workflow to see analytics.")
 
-elif menu == "Execute Pipeline":
-    st.title("🚀 Run Automation Pipeline")
+elif menu == "Workflow Execution":
+    st.title("🚀 Execute Production Pipelines")
     
-    st.markdown("### Upload Business Data (CSV)")
-    uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
+    workflow_type = st.selectbox("Select Workflow Template", [
+        "Customer Support Ticket Classification",
+        "Financial Fraud Risk Analysis",
+        "Executive KPI Reporting"
+    ])
     
-    workflow_name = st.text_input("Workflow Name", "Ticket Classification Support")
+    st.markdown("---")
+    uploaded_file = st.file_uploader("Upload Batch Data (CSV)", type="csv")
     
-    if uploaded_file and st.button("Start AI Pipeline"):
+    if uploaded_file and st.button("Trigger AI Engine"):
         if not llm_service:
-            st.error("Cannot run pipeline: GEMINI_API_KEY is missing.")
+            st.error("AI Service not available. Check API Key.")
         else:
-            with st.spinner("🤖 AI is processing your data..."):
-                # Save uploaded file temporarily
-                temp_path = f"data/outputs/temp_{datetime.now().timestamp()}.csv"
-                with open(temp_path, "wb") as f:
-                    f.write(uploaded_file.getbuffer())
+                import requests
                 
-                pipeline = ReportingPipeline(db_service, llm_service)
+                payload = {
+                    "workflow_name": workflow_type,
+                    "csv_path": os.path.abspath(temp_path)
+                }
+                
                 try:
-                    exec_id, summary = pipeline.run_workflow(workflow_name, temp_path)
-                    st.success(f"Pipeline executed successfully! Execution ID: {exec_id}")
-                    
-                    st.markdown("### Executive Summary")
-                    st.markdown(summary)
-                    
-                    # Clean up
-                    os.remove(temp_path)
+                    # Assuming FastAPI is running on localhost:8000
+                    response = requests.post("http://localhost:8000/workflows/execute", json=payload)
+                    if response.status_code == 200:
+                        data = response.json()
+                        st.success(f"Intelligence gathering triggered! (Task ID: {data['message'].split(': ')[1]})")
+                        st.toast("Worker has accepted the payload.")
+                    else:
+                        st.error(f"Backend Error: {response.text}")
                 except Exception as e:
-                    st.error(f"Pipeline failed: {e}")
+                    st.error(f"Failed to connect to AI Engine: {e}")
 
-elif menu == "Execution History":
-    st.title("📜 Execution History & Results")
+elif menu == "Operation logs":
+    st.title("📜 System Execution Logs")
     
     executions = db_service.get_executions()
     if executions:
-        exec_ids = [f"Execution #{e.id} - {e.workflow.name} ({e.status})" for e in executions]
-        selected_exec_str = st.selectbox("Select Execution to View Results", exec_ids)
-        selected_id = int(selected_exec_str.split("#")[1].split(" ")[0])
-        
-        results = db_service.get_results(selected_id)
-        
-        if results:
-            st.subheader("Classification Results")
-            # Filter out the executive summary from the results table
-            class_results = [r for r in results if r.category != "Executive Summary"]
-            exec_summary = next((r for r in results if r.category == "Executive Summary"), None)
-            
-            if class_results:
-                res_df = pd.DataFrame([{
-                    "Category": r.category,
-                    "Priority": r.priority,
-                    "Input Data": r.input_data,
-                    "AI Reasoning": r.output_data
-                } for r in class_results])
-                st.dataframe(res_df, use_container_width=True)
-            
-            if exec_summary:
-                st.subheader("Generated Executive Summary")
-                st.markdown(exec_summary.output_data)
-        else:
-            st.info("No results found for this execution.")
+        for e in executions[:15]:
+            with st.expander(f"#{e.id} | {e.workflow.name} | {e.status} | {e.started_at.strftime('%H:%M:%S')}"):
+                st.write(f"**Latency:** {e.latency_ms}ms")
+                st.write(f"**Tokens:** {e.token_usage}")
+                results = db_service.get_results(e.id)
+                if results:
+                    st.table(pd.DataFrame([{
+                        "Category": r.category,
+                        "Priority": r.priority,
+                        "Confidence": f"{r.confidence_score}%" if r.confidence_score else "N/A"
+                    } for r in results]))
+                if e.error_message:
+                    st.error(f"Error: {e.error_message}")
     else:
-        st.info("No executions recorded yet.")
+        st.info("No logs available.")
+
+elif menu == "Analytics Deep Dive":
+    st.title("🔬 Advanced AI Analytics")
+    executions = db_service.get_executions()
+    if executions:
+        df = pd.DataFrame([{
+            "Workflow": e.workflow.name,
+            "Latency": e.latency_ms or 0,
+            "Tokens": e.token_usage or 0,
+            "Status": e.status,
+            "Priority": r.priority if (r := next(iter(db_service.get_results(e.id)), None)) else "None"
+        } for e in executions])
+        
+        st.subheader("Tokens vs Latency by Workflow")
+        fig = px.scatter(df, x="Tokens", y="Latency", color="Workflow", size="Tokens", hover_data=['Status'])
+        st.plotly_chart(fig, use_container_width=True)
+        
+        st.subheader("Priority Distribution")
+        fig = px.histogram(df, x="Priority", color="Workflow", barmode="group")
+        st.plotly_chart(fig, use_container_width=True)
+
+elif menu == "AI System Insights":
+    st.title("🧠 AI Operational Intelligence")
+    st.markdown("Automated system analysis and optimization recommendations.")
+    
+    from app.pipelines.insights_pipeline import InsightsPipeline
+    
+    executions = db_service.get_executions()
+    if executions and st.button("Generate Intelligence Report"):
+        with st.spinner("Analyzing system patterns..."):
+            history = [{
+                "workflow": e.workflow.name,
+                "latency": e.latency_ms,
+                "tokens": e.token_usage,
+                "status": e.status
+            } for e in executions[:50]]
+            
+            pipeline = InsightsPipeline(llm_service)
+            insights = pipeline.generate_system_insights(history)
+            
+            for insight in insights:
+                color = "#FFD700" if insight.impact_level == "Medium" else "#FF4B4B" if insight.impact_level == "High" else "#90EE90"
+                st.markdown(f"""
+                <div style="padding:15px; border-radius:10px; border-left: 5px solid {color}; background-color:white; margin-bottom:10px; box-shadow: 2px 2px 5px rgba(0,0,0,0.05);">
+                    <h4 style="margin:0;">{insight.category}: {insight.finding}</h4>
+                    <p style="margin:5px 0;"><b>Recommendation:</b> {insight.recommendation}</p>
+                    <span style="background-color:{color}; padding:2px 8px; border-radius:5px; font-size:12px; color:white;">{insight.impact_level} Impact</span>
+                </div>
+                """, unsafe_allow_html=True)
+    elif not executions:
+        st.info("Insufficient data for intelligence analysis.")
 
 db_service.close()

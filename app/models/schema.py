@@ -30,6 +30,8 @@ class PipelineExecution(Base):
     status = Column(SQLEnum(ExecutionStatus), default=ExecutionStatus.PENDING)
     started_at = Column(DateTime, default=datetime.utcnow)
     completed_at = Column(DateTime)
+    latency_ms = Column(Integer)  # Execution time in milliseconds
+    token_usage = Column(Integer)  # Total AI tokens used
     error_message = Column(Text)
     
     workflow = relationship("Workflow", back_populates="executions")
@@ -40,10 +42,12 @@ class ProcessedResult(Base):
     
     id = Column(Integer, primary_key=True)
     execution_id = Column(Integer, ForeignKey("pipeline_executions.id"))
-    input_data = Column(Text)  # JSON or CSV snippet
-    output_data = Column(Text)  # JSON or summary
-    category = Column(String(50))  # For classification results
+    input_data = Column(Text)
+    output_data = Column(Text)
+    category = Column(String(50))
     priority = Column(String(20))
+    sentiment = Column(String(20))  # Added for production analysis
+    confidence_score = Column(Integer)  # AI confidence (0-100)
     created_at = Column(DateTime, default=datetime.utcnow)
     
     execution = relationship("PipelineExecution", back_populates="results")

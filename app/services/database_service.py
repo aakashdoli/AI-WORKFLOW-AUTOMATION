@@ -33,23 +33,27 @@ class DatabaseService:
         self.db.refresh(execution)
         return execution
 
-    def complete_execution(self, execution_id, error=None):
+    def complete_execution(self, execution_id, latency_ms=0, token_usage=0, error=None):
         execution = self.db.query(PipelineExecution).filter(PipelineExecution.id == execution_id).first()
         if execution:
             execution.status = ExecutionStatus.FAILED if error else ExecutionStatus.COMPLETED
             execution.completed_at = datetime.utcnow()
+            execution.latency_ms = latency_ms
+            execution.token_usage = token_usage
             execution.error_message = error
             self.db.commit()
             self.db.refresh(execution)
         return execution
 
-    def save_result(self, execution_id, input_data, output_data, category=None, priority=None):
+    def save_result(self, execution_id, input_data, output_data, category=None, priority=None, sentiment=None, confidence_score=None):
         result = ProcessedResult(
             execution_id=execution_id,
             input_data=input_data,
             output_data=output_data,
             category=category,
-            priority=priority
+            priority=priority,
+            sentiment=sentiment,
+            confidence_score=confidence_score
         )
         self.db.add(result)
         self.db.commit()

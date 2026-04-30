@@ -12,7 +12,7 @@ class ClassificationPipeline:
     def __init__(self, llm_service: LLMService):
         self.llm_service = llm_service
 
-    def classify_records(self, records: List[dict]) -> List[ClassificationResult]:
+    def classify_records(self, records: List[dict]) -> tuple[List[ClassificationResult], int]:
         prompt = f"""
         Classify the following business records based on their descriptions.
         Categories: Billing Issue, Authentication, Refund Issue, Technical Issue, Escalation Required, Fraud Risk.
@@ -24,9 +24,9 @@ class ClassificationPipeline:
         Return a list of classification objects with ticket_id, category, priority, and a brief reasoning.
         """
         
-        results = self.llm_service.get_structured_output(
+        results, tokens = self.llm_service.get_structured_output(
             prompt=prompt,
             response_mime_type="application/json",
             response_schema=List[ClassificationResult]
         )
-        return results
+        return results, tokens
