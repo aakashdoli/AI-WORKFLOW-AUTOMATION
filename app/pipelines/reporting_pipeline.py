@@ -5,7 +5,7 @@ from app.services.database_service import DatabaseService
 from app.pipelines.classification_pipeline import ClassificationPipeline
 from app.pipelines.fraud_pipeline import FraudPipeline
 from app.pipelines.kpi_pipeline import KPIPipeline
-from app.pipelines.summarization_pipeline import SummarizationPipeline
+from app.pipelines.doc_intel_pipeline import DocumentIntelPipeline
 from app.utils.logger import logger
 import json
 import time
@@ -18,7 +18,7 @@ class ReportingPipeline:
         self.classification_pipeline = ClassificationPipeline(llm_service)
         self.fraud_pipeline = FraudPipeline(llm_service)
         self.kpi_pipeline = KPIPipeline(llm_service)
-        self.summarization_pipeline = SummarizationPipeline(llm_service)
+        self.doc_intel_pipeline = DocumentIntelPipeline(llm_service)
 
     def run_workflow(self, workflow_name: str, csv_path: str):
         logger.info(f"Triggering workflow: {workflow_name} with file: {csv_path}")
@@ -68,6 +68,18 @@ class ReportingPipeline:
                     priority=report.strategic_priority
                 )
             
+            elif "Document" in workflow_name or "contract" in csv_path.lower():
+                results, tokens = self.doc_intel_pipeline.analyze_documents(records)
+                total_tokens = tokens
+                for res in results:
+                    self.db_service.save_result(
+                        execution_id=execution.id,
+                        input_data=json.dumps(res.document_id),
+                        output_data=res.summary,
+                        category="Document Intelligence",
+                        priority=res.risk_level
+                    )
+
             else:
                 results, tokens = self.classification_pipeline.classify_records(records)
                 total_tokens = tokens

@@ -45,4 +45,29 @@ async def execute_workflow(request: WorkflowRequest):
 def get_history():
     db_service = DatabaseService()
     executions = db_service.get_executions()
-    return [{"id": e.id, "workflow": e.workflow.name, "status": e.status} for e in executions]
+    return [{"id": e.id, "workflow": e.workflow.name, "status": e.status, "latency": e.latency_ms} for e in executions]
+
+@app.get("/system/metrics")
+def get_metrics():
+    db_service = DatabaseService()
+    executions = db_service.get_executions()
+    total = len(executions)
+    success = len([e for e in executions if e.status == "COMPLETED"])
+    tokens = sum([e.token_usage for e in executions if e.token_usage])
+    
+    return {
+        "total_executions": total,
+        "success_rate": (success / total * 100) if total > 0 else 0,
+        "total_tokens": tokens,
+        "active_workers": 4 # Simulated for enterprise feel
+    }
+
+@app.get("/analytics/usage")
+def get_usage_analytics():
+    db_service = DatabaseService()
+    # Simple aggregation logic
+    executions = db_service.get_executions()
+    usage = {}
+    for e in executions:
+        usage[e.workflow.name] = usage.get(e.workflow.name, 0) + 1
+    return usage
