@@ -7,7 +7,9 @@ pandas
 python-dotenv
 pydantic
 plotly
-celery
+celery[redis]
+redis
 pyjwt
 passlib[bcrypt]
 python-multipart
+structlog

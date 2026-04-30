@@ -129,8 +129,9 @@ elif menu == "Workflow Execution":
                 }
                 
                 try:
-                    # Assuming FastAPI is running on localhost:8000
-                    response = requests.post("http://localhost:8000/workflows/execute", json=payload)
+                    # Use internal docker network name 'api' for backend communication
+                    backend_url = os.getenv("BACKEND_URL", "http://api:8000")
+                    response = requests.post(f"{backend_url}/workflows/execute", json=payload)
                     if response.status_code == 200:
                         data = response.json()
                         st.success(f"Intelligence gathering triggered! (Task ID: {data['message'].split(': ')[1]})")
