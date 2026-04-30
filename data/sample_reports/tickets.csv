@@ -1,0 +1,6 @@
+Ticket ID,Description,Customer Name,Date
+101,Payment failed during checkout,John Doe,2026-04-28
+102,User cannot login despite resetting password,Jane Smith,2026-04-29
+103,Refund not processed for order #5543,Bob Wilson,2026-04-29
+104,I think someone is trying to access my account from another country,Alice Brown,2026-04-30
+105,The app crashes when I try to upload a profile picture,Charlie Davis,2026-04-30
