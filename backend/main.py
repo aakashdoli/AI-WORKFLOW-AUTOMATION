@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from backend.api.v1.workflows import router as workflow_router
+from backend.api.v1.analytics import router as analytics_router
 from backend.services.database_service import init_db
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -26,6 +27,7 @@ def startup():
 
 # Routers
 app.include_router(workflow_router, prefix="/api/v1")
+app.include_router(analytics_router, prefix="/api/v1")
 
 @app.get("/health")
 def health():

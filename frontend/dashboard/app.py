@@ -9,7 +9,7 @@ import random
 from datetime import datetime
 
 # Add the project root to sys.path
-sys.path.backend.nd(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
 from backend.services.database_service import DatabaseService, init_db
 from backend.services.llm_service import LLMService
@@ -207,7 +207,7 @@ elif menu == "Workflow Marketplace":
         logs = []
         
         def add_log(msg, level="INFO"):
-            logs.backend.nd(f"[{level}] {datetime.now().strftime('%H:%M:%S')} - {msg}")
+            logs.append(f"[{level}] {datetime.now().strftime('%H:%M:%S')} - {msg}")
             log_container.markdown(f'<div class="terminal-output">{"<br>".join(logs)}</div>', unsafe_allow_html=True)
 
         steps = [
@@ -247,7 +247,7 @@ elif menu == "Execution Logs":
     if executions:
         log_data = []
         for e in executions[:50]:
-            log_data.backend.nd({
+            log_data.append({
                 "Timestamp": e.started_at.strftime("%Y-%m-%d %H:%M:%S"),
                 "Workflow": e.workflow.name,
                 "Status": e.status.value,
