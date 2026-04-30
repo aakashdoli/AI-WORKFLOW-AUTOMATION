@@ -2,14 +2,15 @@ import os
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from app.models.schema import Base, Workflow, PipelineExecution, ProcessedResult, ExecutionStatus
+from backend.models.schema import Base, Workflow, PipelineExecution, ProcessedResult, ExecutionStatus
 from datetime import datetime
 
 load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./automation_platform.db")
+# Production DB URL (PostgreSQL)
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@db:5432/ai_ops")
 
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False} if "sqlite" in DATABASE_URL else {})
+engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def init_db():

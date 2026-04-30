@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
-from app.services.llm_service import LLMService
-from app.utils.logger import logger
+from backend.services.llm_service import LLMService
+from backend.utils.logger import logger
 from typing import List
 
 class KPIInsight(BaseModel):
@@ -38,7 +38,7 @@ class KPIPipeline:
         try:
             report, tokens = self.llm_service.get_structured_output(
                 prompt=prompt,
-                response_mime_type="application/json",
+                response_mime_type="backend.ication/json",
                 response_schema=ExecutiveReport
             )
             logger.info("Executive report generated successfully")

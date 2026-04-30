@@ -1,12 +1,12 @@
 import pandas as pd
 from typing import List
-from app.services.llm_service import LLMService
-from app.services.database_service import DatabaseService
-from app.pipelines.classification_pipeline import ClassificationPipeline
-from app.pipelines.fraud_pipeline import FraudPipeline
-from app.pipelines.kpi_pipeline import KPIPipeline
-from app.pipelines.doc_intel_pipeline import DocumentIntelPipeline
-from app.utils.logger import logger
+from backend.services.llm_service import LLMService
+from backend.services.database_service import DatabaseService
+from backend.services.pipelines.classification_pipeline import ClassificationPipeline
+from backend.services.pipelines.fraud_pipeline import FraudPipeline
+from backend.services.pipelines.kpi_pipeline import KPIPipeline
+from backend.services.pipelines.doc_intel_pipeline import DocumentIntelPipeline
+from backend.utils.logger import logger
 import json
 import time
 from datetime import datetime
@@ -40,7 +40,7 @@ class ReportingPipeline:
             
             # 3. Dynamic Workflow Routing & Processing
             if "Fraud" in workflow_name or "transaction" in csv_path.lower():
-                from app.services.notification_service import NotificationService
+                from backend.services.notification_service import NotificationService
                 notifier = NotificationService()
                 results, tokens = self.fraud_pipeline.analyze_transactions(records)
                 total_tokens = tokens

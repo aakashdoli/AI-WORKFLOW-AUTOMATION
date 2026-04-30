@@ -9,10 +9,10 @@ import random
 from datetime import datetime
 
 # Add the project root to sys.path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+sys.path.backend.nd(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
-from app.services.database_service import DatabaseService, init_db
-from app.services.llm_service import LLMService
+from backend.services.database_service import DatabaseService, init_db
+from backend.services.llm_service import LLMService
 
 # Page Config
 st.set_page_config(page_title="AI Ops | Enterprise Command", layout="wide", page_icon="⚡")
@@ -207,7 +207,7 @@ elif menu == "Workflow Marketplace":
         logs = []
         
         def add_log(msg, level="INFO"):
-            logs.append(f"[{level}] {datetime.now().strftime('%H:%M:%S')} - {msg}")
+            logs.backend.nd(f"[{level}] {datetime.now().strftime('%H:%M:%S')} - {msg}")
             log_container.markdown(f'<div class="terminal-output">{"<br>".join(logs)}</div>', unsafe_allow_html=True)
 
         steps = [
@@ -247,7 +247,7 @@ elif menu == "Execution Logs":
     if executions:
         log_data = []
         for e in executions[:50]:
-            log_data.append({
+            log_data.backend.nd({
                 "Timestamp": e.started_at.strftime("%Y-%m-%d %H:%M:%S"),
                 "Workflow": e.workflow.name,
                 "Status": e.status.value,
@@ -272,7 +272,7 @@ elif menu == "AI System Insights":
     st.markdown('<p class="main-header">Strategic Insights</p>', unsafe_allow_html=True)
     st.markdown('<p style="color: #94A3B8; font-size: 1.1rem; margin-bottom: 2rem;">AI-generated recommendations for operational efficiency.</p>', unsafe_allow_html=True)
     
-    from app.pipelines.insights_pipeline import InsightsPipeline
+    from backend.services.pipelines.insights_pipeline import InsightsPipeline
     
     executions = db_service.get_executions()
     if executions:

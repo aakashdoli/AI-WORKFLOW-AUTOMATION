@@ -1,5 +1,5 @@
 from typing import List
-from app.services.llm_service import LLMService
+from backend.services.llm_service import LLMService
 
 class SummarizationPipeline:
     def __init__(self, llm_service: LLMService):

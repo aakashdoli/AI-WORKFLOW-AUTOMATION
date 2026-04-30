@@ -18,17 +18,21 @@ celery_app.conf.update(
     result_serializer="json",
     timezone="UTC",
     enable_utc=True,
+    task_track_started=True,
 )
 
 @celery_app.task(bind=True)
 def run_workflow_task(self, workflow_name: str, csv_path: str):
-    from app.services.database_service import DatabaseService
-    from app.services.llm_service import LLMService
-    from app.pipelines.reporting_pipeline import ReportingPipeline
+    from backend.services.database_service import DatabaseService
+    from backend.services.llm_service import LLMService
+    from backend.services.pipelines.reporting_pipeline import ReportingPipeline
     
     db_service = DatabaseService()
     llm_service = LLMService()
     pipeline = ReportingPipeline(db_service, llm_service)
+    
+    # Update status to RUNNING via the pipeline logic or directly here
+    # For realism, the pipeline already starts the execution.
     
     try:
         exec_id, msg = pipeline.run_workflow(workflow_name, csv_path)

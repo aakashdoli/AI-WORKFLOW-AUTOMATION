@@ -1,7 +1,7 @@
 from typing import List, Optional
 from pydantic import BaseModel
-from app.services.llm_service import LLMService
-from app.utils.logger import logger
+from backend.services.llm_service import LLMService
+from backend.utils.logger import logger
 
 class DocAnalysisResult(BaseModel):
     document_id: str
@@ -35,7 +35,7 @@ class DocumentIntelPipeline:
         try:
             results, tokens = self.llm_service.get_structured_output(
                 prompt=prompt,
-                response_mime_type="application/json",
+                response_mime_type="backend.ication/json",
                 response_schema=List[DocAnalysisResult]
             )
             return results, tokens

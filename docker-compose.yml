@@ -7,30 +7,53 @@ services:
       - "8000:8000"
     environment:
       - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/ai_ops
     env_file: .env
     depends_on:
       - redis
-    command: uvicorn app.api.main:app --host 0.0.0.0 --port 8000
+      - db
+    volumes:
+      - .:/app
+    command: uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
 
   dashboard:
     build: .
     ports:
       - "8501:8501"
     environment:
-      - BACKEND_URL=http://api:8000
+      - BACKEND_URL=http://api:8000/api/v1
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/ai_ops
     env_file: .env
     depends_on:
       - api
-    command: streamlit run app/dashboard/streamlit_app.py --server.port 8501 --server.address 0.0.0.0
+      - db
+    volumes:
+      - .:/app
+    command: streamlit run frontend/dashboard/app.py --server.port 8501 --server.address 0.0.0.0
 
   worker:
     build: .
     environment:
       - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/ai_ops
     env_file: .env
     depends_on:
       - redis
-    command: celery -A app.tasks worker --loglevel=info
+      - db
+    volumes:
+      - .:/app
+    command: celery -A backend.workers.tasks worker --loglevel=info
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=ai_ops
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
   redis:
     image: redis:7-alpine
@@ -38,4 +61,4 @@ services:
       - "6379:6379"
 
 volumes:
-  sqlite_data:
+  postgres_data:

@@ -13,3 +13,4 @@ pyjwt
 passlib[bcrypt]
 python-multipart
 structlog
+psycopg2-binary

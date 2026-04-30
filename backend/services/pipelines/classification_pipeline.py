@@ -1,6 +1,6 @@
 from typing import List, Optional
 from pydantic import BaseModel
-from app.services.llm_service import LLMService
+from backend.services.llm_service import LLMService
 
 class ClassificationResult(BaseModel):
     ticket_id: str
@@ -26,7 +26,7 @@ class ClassificationPipeline:
         
         results, tokens = self.llm_service.get_structured_output(
             prompt=prompt,
-            response_mime_type="application/json",
+            response_mime_type="backend.ication/json",
             response_schema=List[ClassificationResult]
         )
         return results, tokens

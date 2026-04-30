@@ -1,20 +1,20 @@
-# Stage 1: Build dependencies
-FROM python:3.11-slim as builder
-
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install --user --no-cache-dir -r requirements.txt
-
-# Stage 2: Final image
 FROM python:3.11-slim
 
 WORKDIR /app
-COPY --from=builder /root/.local /root/.local
+
+# Install system dependencies for psycopg2
+RUN apt-get update && apt-get install -y \
+    libpq-dev \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
 COPY . .
 
-# Ensure scripts in .local/bin are in PATH
-ENV PATH=/root/.local/bin:$PATH
-ENV PYTHONUNBUFFERED=1
+# Set PYTHONPATH to include the current directory so 'backend' is findable
+ENV PYTHONPATH=/app
 
-# Default command (can be overridden in docker-compose)
-CMD ["uvicorn", "app.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Default command
+CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
